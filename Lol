@@ -1,0 +1,101 @@
+local me = game.Players.LocalPlayer
+local root = me.Character and me.Character:FindFirstChild('HumanoidRootPart')
+if root then root.Anchored = true end
+local offset = Vector3.new(0, 0, 0)
+local origin = CFrame.new()
+local tool
+for _,v in ipairs(me:GetDescendants()) do if v.Name == 'SyncAPI' then tool = v.Parent break end end
+if not tool then for _,v in ipairs(game.ReplicatedStorage:GetDescendants()) do if v.Name == 'SyncAPI' then tool = v.Parent break end end end
+if not tool then warn('yo ur not have f3x') return end
+local syncApi = tool:FindFirstChild('SyncAPI')
+local remote = syncApi and syncApi:FindFirstChild('ServerEndpoint')
+if not remote then warn('no server endpoint found') return end
+local function _(args)
+    if not remote then return end
+    if remote:IsA('RemoteEvent') then
+        pcall(remote.FireServer, remote, unpack(args))
+    else
+        task.spawn(pcall, remote.InvokeServer, remote, unpack(args))
+end
+end
+function CreatePart(partType, cf, parent)
+    if not remote then return nil end
+    local worldCF = (origin + offset) * cf
+    local success, part = pcall(function() return remote:InvokeServer('CreatePart', partType, worldCF, parent) end)
+    return success and part or nil
+end
+function MovePart(part, cf) if not part then return end local worldCF = (origin + offset) * cf _({'SyncMove', {{['Part'] = part, ['CFrame'] = worldCF}}}) end
+function Resize(part, size, cf) if not part then return end local worldCF = (origin + offset) * cf _({'SyncResize', {{['Part'] = part, ['CFrame'] = worldCF, ['Size'] = size}}}) end
+function SetTrans(part, int) if not part then return end _({'SyncMaterial', {{['Part'] = part, ['Transparency'] = int}}}) end
+function Setmate(part, int) if not part then return end _({'SyncMaterial', {{['Part'] = part, ['Material'] = int}}}) end
+function Color(part, color) if not part then return end _({'SyncColor', {{['Part'] = part, ['Color'] = color, ['UnionColoring'] = false}}}) end
+function SetAnchor(boolean, part) if not part then return end _({'SyncAnchor', {{['Part'] = part, ['Anchored'] = boolean}}}) end
+function SetCollision(part, boolean) if not part then return end _({'SyncCollision', {{['Part'] = part, ['CanCollide'] = boolean}}}) end
+function AddMesh(part) if not part then return end _({'CreateMeshes', {{['Part'] = part}}}) end
+function SetMesh(part, meshid) if not part then return end _({'SyncMesh', {{['Part'] = part, ['MeshId'] = 'rbxassetid://' .. meshid}}}) end
+function SpawnDecal(part, side) if not part then return end _({'CreateTextures', {{['Part'] = part, ['Face'] = side, ['TextureType'] = 'Decal'}}}) end
+function AddDecal(part, asset, side) if not part then return end _({'SyncTexture', {{['Part'] = part, ['Face'] = side, ['TextureType'] = 'Decal', ['Texture'] = 'rbxassetid://' .. asset}}}) end
+function MeshResize(part, size) if not part then return end _({'SyncMesh', {{['Part'] = part, ['Scale'] = size}}}) end
+function SetName(part, stringg) if not part then return end _({'SetName', {part}, stringg}) end
+function vect(part, of) if not part then return end _({'SyncMesh', {{['Part'] = part, ['Offset'] = of}}}) end
+function reflect(part, int) if not part then return end _({'SyncMaterial', {{['Part'] = part, ['Reflectance'] = int}}}) end
+function SetMeshtype(part, type) if not part then return end _({'SyncMesh', {{['Part'] = part, ['MeshType'] = type}}}) end
+local generatedParts = {}
+task.wait(0.1)
+-- Copy Lighting HD ADMIN commands
+local hdSignals = game:GetService('ReplicatedStorage'):FindFirstChild('HDAdminClient') and game:GetService('ReplicatedStorage').HDAdminClient:FindFirstChild('Signals')
+local hdRemote = hdSignals and hdSignals:FindFirstChild('RequestCommand')
+if hdRemote then
+    pcall(function() hdRemote:InvokeServer(';time 14.00') end)
+    pcall(function() hdRemote:InvokeServer(';fog 100000') end)
+    pcall(function() hdRemote:InvokeServer(';fogcolor 192 192 192') end)
+end
+local partsToDelete = {}
+for _, v in ipairs(workspace:GetDescendants()) do
+    if v:IsA('BasePart') and v.Name ~= 'Terrain' then
+        local isPlrPart = false
+        for _, p in ipairs(game.Players:GetPlayers()) do
+            if p.Character and v:IsDescendantOf(p.Character) then
+                isPlrPart = true
+                break
+            end
+        end
+        if not isPlrPart then
+            table.insert(partsToDelete, v)
+        end
+    end
+end
+if #partsToDelete > 0 then
+    pcall(function() _({'Remove', partsToDelete}) end)
+end
+task.wait(0.5)
+function SetupPart(idx, partType, cf, size, name, color, mat, trans, refl, coll, anch)
+    generatedParts[idx] = CreatePart(partType, cf, workspace)
+    Resize(generatedParts[idx], size, cf)
+    SetName(generatedParts[idx], name)
+    Color(generatedParts[idx], color)
+    Setmate(generatedParts[idx], mat)
+    SetTrans(generatedParts[idx], trans)
+    reflect(generatedParts[idx], refl)
+    SetCollision(generatedParts[idx], coll)
+    SetAnchor(anch, generatedParts[idx])
+end
+task.wait(0.1)
+SetupPart(1, "Normal", CFrame.new(-82.167, 19.000, 323.097, 1.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 1.000), Vector3.new(158.000, 39.000, 115.000), "Part", Color3.new(0.380, 0.373, 0.376), Enum.Material.Concrete, 0.000, 0.000, true, true)
+SetupPart(2, "Spawn", CFrame.new(-88.502, 38.500, 318.769, 0.000, 0.000, -1.000, 0.000, 1.000, 0.000, 1.000, 0.000, 0.000), Vector3.new(58.000, 1.000, 49.000), "SpawnLocation", Color3.new(1.000, 0.000, 0.000), Enum.Material.Plastic, 0.000, 0.000, true, true)
+SpawnDecal(generatedParts[2], Enum.NormalId.Top)
+task.wait(0.15)
+AddDecal(generatedParts[2], "91069260052409", Enum.NormalId.Top)
+SetupPart(3, "Normal", CFrame.new(-112.860, 52.500, 277.092, 0.000, 0.000, -1.000, 0.000, 1.000, 0.000, 1.000, 0.000, 0.000), Vector3.new(1.000, 29.000, 43.000), "Part", Color3.new(0.631, 0.627, 0.639), Enum.Material.ForceField, 0.000, 0.000, true, true)
+SpawnDecal(generatedParts[3], Enum.NormalId.Right)
+task.wait(0.15)
+AddDecal(generatedParts[3], "91069260052409", Enum.NormalId.Right)
+SetupPart(4, "Normal", CFrame.new(-54.860, 52.500, 277.092, 0.000, 0.000, -1.000, 0.000, 1.000, 0.000, 1.000, 0.000, 0.000), Vector3.new(1.000, 29.000, 43.000), "Part", Color3.new(0.631, 0.627, 0.639), Enum.Material.ForceField, 0.000, 0.000, true, true)
+SpawnDecal(generatedParts[4], Enum.NormalId.Right)
+task.wait(0.15)
+AddDecal(generatedParts[4], "92658511902181", Enum.NormalId.Right)
+SetupPart(5, "Normal", CFrame.new(-85.860, 62.000, 364.092, 0.000, 0.000, 1.000, 0.000, 1.000, 0.000, -1.000, 0.000, 0.000), Vector3.new(1.000, 48.000, 71.000), "Part", Color3.new(0.631, 0.627, 0.639), Enum.Material.ForceField, 0.000, 0.000, true, true)
+SpawnDecal(generatedParts[5], Enum.NormalId.Right)
+task.wait(0.15)
+AddDecal(generatedParts[5], "70659221430600", Enum.NormalId.Right)
+if root then root.Anchored = false end
